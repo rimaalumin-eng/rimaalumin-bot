@@ -3,7 +3,8 @@ import logging
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-TOKEN = "8118878726:AAG9DOwU10C4ZU_pIPPLnfhqDxO_DgRA2xM"  # توکن خودت رو اینجا بذار
+import os
+TOKEN = os.environ.get('TOKEN')  # توکن خودت رو اینجا بذار
 
 # حالت‌های مکالمه
 CHOOSING_DOOR_TYPE, ENTERING_WIDTH, ENTERING_HEIGHT, CHOOSING_MOTOR, CONFIRM_FINAL_PRICE, NEED_INSTALLATION = range(6)
