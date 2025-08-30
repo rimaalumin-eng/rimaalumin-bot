@@ -1,33 +1,34 @@
-from telegram.ext import Application, CommandHandler, ConversationHandler, MessageHandler, filters
 import logging
+import os
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-import os
-TOKEN = os.environ.get('TOKEN')  # توکن خودت رو اینجا بذار
+TOKEN = os.environ.get('TOKEN')
 
 # حالت‌های مکالمه
-CHOOSING_DOOR_TYPE, ENTERING_WIDTH, ENTERING_HEIGHT, CHOOSING_MOTOR, CONFIRM_FINAL_PRICE, NEED_INSTALLATION = range(6)
+CHOOSING_DOOR_TYPE, ENTERING_WIDTH, ENTERING_HEIGHT, CHOOSING_MOTOR, NEED_INSTALLATION = range(5)
 
 # قیمت هر متر مربع
 PRICE_PER_SQUARE_METER = {
-    "1": 1950000,  # تیغه قوس سبک
-    "2": 2300000,  # تیغه قوس وزن سنگین
-    "3": 3100000,  # لوکس 70
-    "4": 3200000,  # لوکس 90
-    "5": 2800000   # تیغه 100
+    "1": 1950000,
+    "2": 2300000,
+    "3": 3100000,
+    "4": 3200000,
+    "5": 2800000
 }
 
 # قیمت موتورها
 MOTOR_PRICES = {
-    "1": 5700000,  # ساید 300 کیلو
-    "2": 6200000,  # ساید 600 کیلو
-    "3": 4500000,  # توبلار با متعلقات کامل تا 12 متر مربع
-    "4": 4900000,  # توبلار با متعلقات کامل تا 14 متر مربع
-    "5": 5200000   # توبلار با متعلقات کامل تا 16 متر مربع
+    "1": 5700000,
+    "2": 6200000,
+    "3": 4500000,
+    "4": 4900000,
+    "5": 5200000
 }
 
-async def start(update, context):
+async def start(update: Update, context):
     await update.message.reply_text(
         "به ربات آنلاین قیمت‌گذاری مجموعه ریما الومین خوش آمدید!\n"
         "لطفاً نوع درب را انتخاب کنید:\n"
@@ -40,7 +41,7 @@ async def start(update, context):
     )
     return CHOOSING_DOOR_TYPE
 
-async def choose_door_type(update, context):
+async def choose_door_type(update: Update, context):
     user_input = update.message.text
     if user_input in PRICE_PER_SQUARE_METER:
         context.user_data['door_type'] = user_input
@@ -53,7 +54,7 @@ async def choose_door_type(update, context):
         await update.message.reply_text("گزینه نامعتبر! لطفاً شماره 1 تا 5 را انتخاب کنید یا /start را بزنید.")
         return CHOOSING_DOOR_TYPE
 
-async def enter_width(update, context):
+async def enter_width(update: Update, context):
     try:
         width_cm = float(update.message.text)
         context.user_data['width_cm'] = width_cm
@@ -65,7 +66,7 @@ async def enter_width(update, context):
         await update.message.reply_text("لطفاً یک عدد معتبر (سانتیمتر) برای عرض وارد کنید یا /start را بزنید.")
         return ENTERING_WIDTH
 
-async def enter_height(update, context):
+async def enter_height(update: Update, context):
     try:
         height_cm = float(update.message.text)
         context.user_data['height_cm'] = height_cm
@@ -95,7 +96,7 @@ async def enter_height(update, context):
         await update.message.reply_text("لطفاً یک عدد معتبر (سانتیمتر) برای ارتفاع وارد کنید یا /start را بزنید.")
         return ENTERING_HEIGHT
 
-async def choose_motor(update, context):
+async def choose_motor(update: Update, context):
     user_input = update.message.text
     if user_input in MOTOR_PRICES:
         context.user_data['motor_type'] = user_input
@@ -112,7 +113,7 @@ async def choose_motor(update, context):
         await update.message.reply_text("گزینه نامعتبر! لطفاً شماره 1 تا 5 را انتخاب کنید یا /start را بزنید.")
         return CHOOSING_MOTOR
 
-async def need_installation(update, context):
+async def need_installation(update: Update, context):
     user_input = update.message.text.lower()
     total_area = context.user_data['total_area']
     if user_input == "بله":
@@ -121,7 +122,7 @@ async def need_installation(update, context):
         elif total_area <= 25:
             installation_cost = 4500000
         else:
-            installation_cost = 4500000  # برای ابعاد بیشتر، حداکثر هزینه
+            installation_cost = 4500000
         context.user_data['installation_cost'] = installation_cost
         total_price_tiogh = context.user_data['total_price_tiogh']
         motor_price = context.user_data['motor_price']
@@ -152,7 +153,7 @@ async def need_installation(update, context):
         return NEED_INSTALLATION
 
 def main():
-    app = Application.builder().token(TOKEN).build()
+    application = Application.builder().token(TOKEN).build()
     
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -163,11 +164,11 @@ def main():
             CHOOSING_MOTOR: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_motor)],
             NEED_INSTALLATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, need_installation)]
         },
-        fallbacks=[CommandHandler("start", start)]  # برگشت به شروع با /start در هر مرحله
+        fallbacks=[CommandHandler("start", start)]
     )
     
-    app.add_handler(conv_handler)
-    app.run_polling()
+    application.add_handler(conv_handler)
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
